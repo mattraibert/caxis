@@ -1,3 +1,5 @@
+$stdout.sync = true
+
 require 'rest-client'
 require 'uri'
 
@@ -10,23 +12,53 @@ positions = ["Old Man Jr", "Wilt CU", "Overview", "Sag CU", "SW", "West", "Spike
              "Ruffles", "SpineyGuy_CU", "Bishops Cap", "South", "Sag upper", "Bullet",
              "OctoberPoly", "PolygonaGroup", "Silver Dollar", "Twins", "Menorah Jr", "Aloe tree"]
 
-wait_seconds = 5
+class Position
+  TIME_PATTERN = "%Y-%m-%d-%H-%M-%S"
+  WAIT_SECONDS = 2
 
-time_pattern = "%Y-%m-%d-%H-%M-%S"
+  def initialize(position)
+    @position = position
+    @created_at = Time.now
+  end
 
+  def snap!
+    goto!
+    WAIT_SECONDS.times { print '#'; sleep(1) }
+    print "\n"
+    get_image!
+  end
 
-positions.each do |position|
-  puts "Switching to #{position}..."
-  RestClient.get("http://www.raibert.com:8085/axis-cgi/com/ptz.cgi?gotoserverpresetname=#{URI.escape(position)}&camera=1&speed=100")
-  wait_seconds.times { sleep(1); print ?# }
-  puts ?#
+  def goto!
+    puts "Switching to #{@position}..."
+    RestClient.get("http://www.raibert.com:8085/axis-cgi/com/ptz.cgi?gotoserverpresetname=#{URI.escape(@position)}&camera=1&speed=100")
+  end
 
-  response = RestClient.get("http://www.raibert.com:8085/axis-cgi/jpg/image.cgi?camera=1")
+  def get_image!
+    response = RestClient.get("http://www.raibert.com:8085/axis-cgi/jpg/image.cgi?camera=1")
 
-  filename = "#{position.gsub(" ", "_")}-#{Time.now.strftime(time_pattern)}.jpg"
-  filepath = File.join("/code/images", filename)
-  File.write(filepath, response)
-  puts "Wrote to file #{filename}."
-  puts "\n"
+    File.write(filepath, response)
+    puts "Wrote to file #{filepath}.\n\n"
+  end
+
+  def exists?
+    File.exists?(self.filepath)
+  end
+
+  def filepath
+    filename = "#{@position.gsub(" ", "_")}-#{@created_at.strftime(TIME_PATTERN)}.jpg"
+    filepath = File.join("/code/images", filename)
+  end
 end
 
+positions.each do |position|
+  p = Position.new(position)
+  10.times do
+    begin
+      if !p.exists?
+        p.snap!
+      end
+    rescue Errno::ECONNREFUSED => e
+      puts "Failed to connect. Retrying... \n"    
+    end
+  end
+end
