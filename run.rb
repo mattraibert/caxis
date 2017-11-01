@@ -1,5 +1,5 @@
 $stdout.sync = true
 
-require "./cactus.rb"
+Dir["#{File.dirname(__FILE__)}/cactus*.rb"].each { |f| load(f) }
 
 Cactus.run!
