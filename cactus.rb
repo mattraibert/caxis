@@ -33,16 +33,18 @@ class Position
   end
 
   def self.laps
-    ["Sag_CU-focus", "Sag CU", "Sag arm3 CU", "Sag upper", 
+    ["Sag_CU-focus", "Sag CU", "Sag arm3 CU", "Sag upper",
      "Spike-Organ-Clarence", "Spike middle", "Wilt CU",
-     "E barard1", "E barard2", "Mammilaria", "Opuntia Village", 
+     "E barard1", "E barard2", "Mammilaria", "Opuntia Village",
      "Golden Barrels", "Sputnik", "Hook",
      "Silver Torch", "OldMan", "Bullet", "Pachypodium", "Quimilo",
      "MF Top", "MF middle", "Barrel town", "Santa Rita",
      "Old Man Jr", "Menorah Jr", "Stetsona", "Red beards",
      "E variegated", "O variegated", "Twins",
      "PolygonaGetto", "Soft Serve", "Ruffles", "OctoberPoly", "PolygonaGroup",
-     "Bishops Cap", "SpineyGuy_CU", "Silver Dollar", "PonyTailTop", "Aloe tree" ]
+     "Bishops Cap", "SpineyGuy_CU", "Silver Dollar", "PonyTailTop", "Aloe tree" ].map do |lap|
+      Position.new(lap)
+    end
   end
 
   def get_image!
@@ -66,7 +68,7 @@ class Cactus
   def self.run!
     $stdout.sync = true
 
-    Position.all.each do |position|
+    Position.laps.each do |position|
       10.times do
         begin
           if !position.exists?

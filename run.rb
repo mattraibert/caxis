@@ -1,5 +1,3 @@
-
-
 $stdout.sync = true
 
 require "./cactus.rb"
