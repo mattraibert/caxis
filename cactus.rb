@@ -3,10 +3,13 @@ require 'uri'
 
 class Position
   TIME_PATTERN = "midnight-%Y-%j"
+  RETRIES = 10
+  RETRY_WAIT = 10
   WAIT_SECONDS = 10
   BASEDIR = "D:/OH2-Grow/CactusLapsImages"
   APISRV = "http://www.raibert.com:8085"
   CAMERA_PARAM = "camera=1"
+  LOGFILE = File.join(BASEDIR, "cactus.log")
 
   def initialize(position)
     @position = position
@@ -66,36 +69,40 @@ class Position
     filepath = File.join(BASEDIR, filename)
   end
 
-  LOGFILE = File.join(BASEDIR, "cactus.log")
-
   def self.log(msg)
     puts(msg)
     File.open(LOGFILE, 'a+') { |f| f.write("#{Time.now.strftime('%Y-%m-%d %I:%M:%S%p')}: #{msg.strip}\n") } if !msg.nil?
   end
 end
 
+def safely
+  if block_given?
+    begin
+      yield
+    rescue => e
+      Position.log("uncaught exception: #{e}")
+      Position.log("Stack trace:\n#{e.backtrace.map { |l| "  #{l}\n" }.join}")
+      Position.log("Waiting #{Position::RETRY_WAIT} seconds.")
+      sleep(Position::RETRY_WAIT)
+    end
+  else
+    raise "no block"
+  end
+end
+
 class Cactus
   def self.run!
-    begin
-      $stdout.sync = true
-
+    $stdout.sync = true
+    safely do
       Position.laps.each do |position|
-        10.times do
-          begin
+        Position::RETRIES.times do
+          safely do
             if !position.exists?
               position.snap!
             end
-          rescue Errno::ECONNREFUSED => e
-            Position.log "Failed to connect. Retrying... \n"
-          rescue => e
-            Position.log("uncaught #{e} exception while handling connection: #{e.message}")
-            Position.log("Stack trace: #{backtrace.map { |l| "  #{l}\n" }.join}")
           end
         end
       end
-    rescue => e
-      Position.log("uncaught #{e} exception while handling connection: #{e.message}")
-      Position.log("Stack trace: #{backtrace.map { |l| "  #{l}\n" }.join}")
     end
   end
 end
