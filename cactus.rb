@@ -18,18 +18,19 @@ class Position
 
   def snap!
     goto!
-    WAIT_SECONDS.times { print '#'; sleep(1) }
+    Position.log("Waiting #{WAIT_SECONDS} seconds")
+    sleep(WAIT_SECONDS)
     print "\n"
     get_image!
   end
 
   def goto!
     Position.log "Switching to #{@position}..."
-    RestClient.get("#{APISRV}/axis-cgi/com/ptz.cgi?gotoserverpresetname=#{URI.escape(@position)}&#{CAMERA_PARAM}&speed=70")
+    Position.axis_get("com/ptz.cgi?gotoserverpresetname=#{URI.escape(@position)}&#{CAMERA_PARAM}&speed=70")
   end
 
   def self.all
-    presets = RestClient.get("#{APISRV}/axis-cgi/com/ptz.cgi?query=presetposcam&#{CAMERA_PARAM}")
+    presets = Position.axis_get("com/ptz.cgi?query=presetposcam&#{CAMERA_PARAM}")
     presets.body.split("\r\n").drop(1).map do |preset|
       Position.new(preset.split("=").last)
     end
@@ -54,7 +55,7 @@ class Position
   end
 
   def get_image!
-    response = RestClient.get("#{APISRV}/axis-cgi/jpg/image.cgi?#{CAMERA_PARAM}")
+    response = Position.axis_get("jpg/image.cgi?#{CAMERA_PARAM}")
 
     IO.binwrite(filepath, response)
     Position.log "Wrote to file #{filepath}\n\n"
@@ -66,12 +67,16 @@ class Position
 
   def filepath
     filename = "#{@position.gsub(" ", "_")}-#{@created_at.strftime(TIME_PATTERN)}.jpg"
-    filepath = File.join(BASEDIR, filename)
+    File.join(BASEDIR, filename)
   end
 
   def self.log(msg)
-    puts(msg)
     File.open(LOGFILE, 'a+') { |f| f.write("#{Time.now.strftime('%Y-%m-%d %I:%M:%S%p')}: #{msg.strip}\n") } if !msg.nil?
+  end
+
+  def self.axis_get(axis_request)
+    Position.log(axis_request)
+    RestClient.get("#{APISRV}/axis-cgi/"+axis_request)
   end
 end
 
