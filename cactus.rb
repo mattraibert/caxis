@@ -21,7 +21,7 @@ class Position
   end
 
   def goto!
-    puts "Switching to #{@position}..."
+    Position.log "Switching to #{@position}..."
     RestClient.get("#{APISRV}/axis-cgi/com/ptz.cgi?gotoserverpresetname=#{URI.escape(@position)}&#{CAMERA_PARAM}&speed=70")
   end
 
@@ -45,7 +45,7 @@ class Position
      "PolygonaGetto", "Soft Serve", "Ruffles",
      "OctoberPoly", "Miles", "PolygonaGroup",
      "Bishops Cap", "SpineyGuy_CU", "Silver Dollar",
-     "PonyTailTop", "Aloe tree" ].map do |lap|
+     "PonyTailTop", "Aloe tree"].map do |lap|
       Position.new(lap)
     end
   end
@@ -54,7 +54,7 @@ class Position
     response = RestClient.get("#{APISRV}/axis-cgi/jpg/image.cgi?#{CAMERA_PARAM}")
 
     IO.binwrite(filepath, response)
-    puts "Wrote to file #{filepath}.\n\n"
+    Position.log "Wrote to file #{filepath}\n\n"
   end
 
   def exists?
@@ -65,22 +65,38 @@ class Position
     filename = "#{@position.gsub(" ", "_")}-#{@created_at.strftime(TIME_PATTERN)}.jpg"
     filepath = File.join(BASEDIR, filename)
   end
+
+  LOGFILE = File.join(BASEDIR, "cactus.log")
+
+  def self.log(msg)
+    puts(msg)
+    File.open(LOGFILE, 'a+') { |f| f.write("#{Time.now.strftime('%Y-%m-%d %I:%M:%S%p')}: #{msg.strip}\n") } if !msg.nil?
+  end
 end
 
 class Cactus
   def self.run!
-    $stdout.sync = true
+    begin
+      $stdout.sync = true
 
-    Position.laps.each do |position|
-      10.times do
-        begin
-          if !position.exists?
-            position.snap!
+      Position.laps.each do |position|
+        10.times do
+          begin
+            if !position.exists?
+              position.snap!
+            end
+          rescue Errno::ECONNREFUSED => e
+            Position.log "Failed to connect. Retrying... \n"
+          rescue => e
+            Position.log("uncaught #{e} exception while handling connection: #{e.message}")
+            Position.log("Stack trace: #{backtrace.map { |l| "  #{l}\n" }.join}")
           end
-        rescue Errno::ECONNREFUSED => e
-          puts "Failed to connect. Retrying... \n"
         end
       end
+    rescue => e
+      Position.log("uncaught #{e} exception while handling connection: #{e.message}")
+      Position.log("Stack trace: #{backtrace.map { |l| "  #{l}\n" }.join}")
     end
   end
 end
+
