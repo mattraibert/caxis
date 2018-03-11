@@ -1,7 +1,10 @@
-version: '3'
+version: '3.4'
 services:
-  tf:
+  tf1:
     image: gcr.io/tensorflow/tensorflow:latest-devel
     volumes:
-      - ./tf_files:/tf_files
+      - ./data/trn:/tf_files/data
+      - ./set1/bottlenecks:/tf_files/bottlenecks
+      - ./set1/out:/tf_files/out
     working_dir: /tf_files
+    command: tail -f /dev/null

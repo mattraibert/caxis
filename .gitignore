@@ -1,8 +1,8 @@
 images/
 .idea/
 *.iml
-tf_files/data
-tf_files/bottlenecks
-tf_files/inception
-tf_files/retrained_graph.pb
+data/
+bottlenecks/
+inception/
+retrained_graph.pb
 tests/
