@@ -6,3 +6,4 @@ bottlenecks/
 inception/
 retrained_graph.pb
 tests/
+venv/

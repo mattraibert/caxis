@@ -3,8 +3,49 @@ services:
   tf1:
     image: gcr.io/tensorflow/tensorflow:latest-devel
     volumes:
-      - ./data/trn:/tf_files/data
+      - ./data/set1:/tf_files/data
       - ./set1/bottlenecks:/tf_files/bottlenecks
       - ./set1/out:/tf_files/out
+      - ./train.sh:/tf_files/train.sh
+      - ./label_image.py:/tf_files/label_image.py
+      - ./data/tst:/tf_files/test
+      - ./inception:/tf_files/inception
     working_dir: /tf_files
     command: tail -f /dev/null
+  tf2:
+    image: gcr.io/tensorflow/tensorflow:latest-devel
+    volumes:
+      - ./data/set2:/tf_files/data
+      - ./set2/bottlenecks:/tf_files/bottlenecks
+      - ./set2/out:/tf_files/out
+      - ./train.sh:/tf_files/train.sh
+      - ./label_image.py:/tf_files/label_image.py
+      - ./data/tst:/tf_files/test
+      - ./inception:/tf_files/inception
+    working_dir: /tf_files
+    command: tail -f /dev/null
+  tf3:
+    image: gcr.io/tensorflow/tensorflow:latest-devel
+    volumes:
+      - ./data/set3:/tf_files/data
+      - ./set3/bottlenecks:/tf_files/bottlenecks
+      - ./set3/out:/tf_files/out
+      - ./train.sh:/tf_files/train.sh
+      - ./label_image.py:/tf_files/label_image.py
+      - ./data/tst:/tf_files/test
+      - ./inception:/tf_files/inception
+    working_dir: /tf_files
+    command: tail -f /dev/null
+  tfall:
+    image: gcr.io/tensorflow/tensorflow:latest-devel
+    volumes:
+      - ./data/allset:/tf_files/data
+      - ./allset/bottlenecks:/tf_files/bottlenecks
+      - ./allset/out:/tf_files/out
+      - ./train.sh:/tf_files/train.sh
+      - ./label_image.py:/tf_files/label_image.py
+      - ./data/tst:/tf_files/test
+      - ./inception:/tf_files/inception
+    working_dir: /tf_files
+    command: tail -f /dev/null
+

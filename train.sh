@@ -1,5 +1,7 @@
 #!/bin/bash
 
+pushd /tensorflow/ && git pull && popd
+
 python /tensorflow/tensorflow/examples/image_retraining/retrain.py \
  --bottleneck_dir=/tf_files/bottlenecks \
  --how_many_training_steps 2048 \
