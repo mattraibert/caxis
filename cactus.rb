@@ -1,13 +1,14 @@
 require 'rest-client'
 require 'uri'
+require 'csv'
 
 class Position
-  TIME_PATTERN = "night-Cam6-%Y-%j"
+  TIME_PATTERN = "night-Cam6-%Y-%j-%m-%s"
   RETRIES = 10
   RETRY_WAIT = 10
   WAIT_SECONDS = 5
-  BASEDIR = "D:/OH2-Grow/CactusLapsImages"
-  APISRV = "http://192.168.1.26"
+  BASEDIR = "/Users/mattraibert/Downloads"
+  APISRV = "http://www.raibert.com:8085"
   CAMERA_PARAM = "camera=1"
   LOGFILE = File.join(BASEDIR, "cactus.log")
 
@@ -26,36 +27,22 @@ class Position
 
   def goto!
     Position.log "Switching to #{@position}..."
-    Position.axis_get("com/ptz.cgi?gotoserverpresetname=#{URI.escape(@position)}&#{CAMERA_PARAM}&speed=70")
+    Position.ptz!(to_query_params)
   end
 
   def self.all
-    presets = Position.axis_get("com/ptz.cgi?query=presetposcam&#{CAMERA_PARAM}")
-    presets.body.split("\r\n").drop(1).map do |preset|
-      Position.new(preset.split("=").last)
+    data = CSV.read("./shotlist.csv", headers: true)
+    data.map do |row|
+      Position.new(row)
     end
   end
 
-  def self.laps
-    ["Cardon-spiney", "M-brandon", "M-4head",
-     "O-ficus-indica", "Medusa", "PolyScarpa", 
-     "E-bupleurifolia", "E-fruticosa", 
-     "E-grandicornis",
-     "GrizzlyBear", "White-mammillaria", "Spiney-pringlei", "Notocactus", 
-     "Thelocactus-rinconensis", "WoolyBully2", "E-variagata1", 
-     "O-violacea", "HedgeHog", "D-elephantipes", 
-     "Ferocactus-DFWM", "E-pectinatus", "Astrophytum-ornatum2",
-     "Agave", "GoldenCluster", "M-geminispina", "E-variagata",
-     "Golden-louise", "Bullet", "Alluaudia2",
-     "AloeTree", "SilverTorch",
-     "PonytailPalm", "SpikeLower", "Astrophytum-ornatum", "Agave-reversata", 
-     "Sag3Arms", "Sag-Sunburn", "Sag2Arms",
-     "Workbench", "O-horizontal",
-     "Dyckia", "Angus-pups", "E-grandicornis2",
-     "E-horrida-spain", "Didiera-trollii",
-     "HairyTwins", "SantaRita"
-    ].map do |lap|Position.new(lap)
-    end
+  def to_query_params
+    @position.to_hash.slice(*%w(focus tilt pan iris zoom)).map {|k, v| "#{k}=#{v}" }.join "&"
+  end
+
+  def self.ptz!(params)
+    Position.axis_get("com/ptz.cgi?#{params}&#{CAMERA_PARAM}&speed=70")
   end
 
   def get_image!
@@ -70,7 +57,7 @@ class Position
   end
 
   def filepath
-    filename = "#{@position.gsub(" ", "_")}-#{@created_at.strftime(TIME_PATTERN)}.jpg"
+    filename = "#{@position["Plant Name"].gsub(" ", "_")}-#{@created_at.strftime(TIME_PATTERN)}.jpg"
     File.join(BASEDIR, filename)
   end
 
@@ -103,7 +90,7 @@ class Cactus
   def self.run!
     $stdout.sync = true
     safely do
-      Position.laps.each do |position|
+      Position.all.each do |position|
         Position::RETRIES.times do
           safely do
             if !position.exists?
