@@ -2,12 +2,12 @@ require 'rest-client'
 require 'uri'
 
 class Position
-  TIME_PATTERN = "midnight-%Y-%j"
+  TIME_PATTERN = "night-Cam6-%Y-%j"
   RETRIES = 10
   RETRY_WAIT = 10
-  WAIT_SECONDS = 10
+  WAIT_SECONDS = 5
   BASEDIR = "D:/OH2-Grow/CactusLapsImages"
-  APISRV = "http://www.raibert.com:8085"
+  APISRV = "http://192.168.1.26"
   CAMERA_PARAM = "camera=1"
   LOGFILE = File.join(BASEDIR, "cactus.log")
 
@@ -37,20 +37,24 @@ class Position
   end
 
   def self.laps
-    ["Sag_CU-focus", "Sag CU", "Sag arm3 CU", "Sag upper",
-     "SpikeTop", "Spike-Organ-Clarence", "Spike middle", "Wilt CU",
-     "E barard1", "E barard2", "Mammilaria", "Opuntia Village",
-     "Golden Barrels", "Sputnik", "Hook",
-     "Silver Torch", "OldMan", "Bullet", "BulletMiddle",
-     "Pachypodium", "Quimilo", "Barrel town", "Santa Rita",
-     "MF Top", "MF middle",
-     "Old Man Jr", "Menorah Jr", "Stetsona", "Red beards",
-     "E variegated", "O variegated", "Twins",
-     "PolygonaGetto", "Soft Serve", "Ruffles",
-     "OctoberPoly", "Miles", "PolygonaGroup",
-     "Bishops Cap", "SpineyGuy_CU", "Silver Dollar",
-     "PonyTailTop", "Aloe tree"].map do |lap|
-      Position.new(lap)
+    ["Cardon-spiney", "M-brandon", "M-4head",
+     "O-ficus-indica", "Medusa", "PolyScarpa", 
+     "E-bupleurifolia", "E-fruticosa", 
+     "E-grandicornis",
+     "GrizzlyBear", "White-mammillaria", "Spiney-pringlei", "Notocactus", 
+     "Thelocactus-rinconensis", "WoolyBully2", "E-variagata1", 
+     "O-violacea", "HedgeHog", "D-elephantipes", 
+     "Ferocactus-DFWM", "E-pectinatus", "Astrophytum-ornatum2",
+     "Agave", "GoldenCluster", "M-geminispina", "E-variagata",
+     "Golden-louise", "Bullet", "Alluaudia2",
+     "AloeTree", "SilverTorch",
+     "PonytailPalm", "SpikeLower", "Astrophytum-ornatum", "Agave-reversata", 
+     "Sag3Arms", "Sag-Sunburn", "Sag2Arms",
+     "Workbench", "O-horizontal",
+     "Dyckia", "Angus-pups", "E-grandicornis2",
+     "E-horrida-spain", "Didiera-trollii",
+     "HairyTwins", "SantaRita"
+    ].map do |lap|Position.new(lap)
     end
   end
 
@@ -112,3 +116,4 @@ class Cactus
   end
 end
 
+Cactus.run!
